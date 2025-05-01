@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Agente AI</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f5f0fa;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #3a2c4e;
+    }
+
+    .container {
+      width: 85%;
+      max-width: 1100px;
+      padding: 40px;
+      background-color: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 6px 15px rgba(90, 69, 112, 0.2);
+      text-align: center;
+    }
+
+    h1 {
+      color: #8e44ad;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+    }
+
+    textarea {
+      width: 90%;
+      height: 75px;
+      padding: 15px;
+      border-radius: 8px;
+      border: 2px solid #d6b3f0;
+      font-size: 16px;
+      margin-top: 20px;
+      box-sizing: border-box;
+    }
+
+    select {
+      width: 200px;
+      padding: 12px 40px;
+      border-radius: 8px;
+      border: 2px solid #d6b3f0;
+      font-size: 16px;
+      background-color: #fff;
+      margin-top: 0;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 12px 40px;
+      background-color: #caa4f4;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      width: 200px;
+      margin-top: 0;
+    }
+
+    button:hover {
+      background-color: #b483e6;
+    }
+
+    #response {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f3e9ff;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      width: 90%;
+      margin: 30px auto;
+    }
+
+    #response {
+      transition: opacity 0.3s ease;
+    }
+
+    .form-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Qual è la tua domanda?</h1>
+    <form>
+      <textarea id="question" placeholder="Scrivi la tua domanda qui..."></textarea>
+      
+      <div class="form-row">
+      <select id="option">
+        <option value="rag">RAG</option>
+        <option value="default">Default</option>
+      </select>
+
+      <button type="button" onclick="ask()">Invia</button></div>
+    </form>
+    <div id="response"></div>
+  </div>
+
+  <script>
+    async function ask() {
+      const question = document.getElementById("question").value;
+      const option = document.getElementById("option").value;
+      const responseDiv = document.getElementById("response");
+      responseDiv.innerHTML = "Attendere...";
+
+      const res = await fetch("http://localhost:8000/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question, mode: option })
+      });
+
+      const data = await res.json();
+      responseDiv.innerText = data.answer.text || data.answer || "Nessuna risposta ricevuta.";
+      responseDiv.style.opacity = 1;
+    }
+  </script>
+</body>
+</html>
