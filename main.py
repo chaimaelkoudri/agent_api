@@ -114,11 +114,7 @@ async def ask(request: Request):
     global vector_store, qa_chain
     data = await request.json()
     question = data.get("question", "")
-    context = (
-        "In questo sistema, tutte le risposte vengono fornite in italiano."
-        "Assicurati che la domanda sia chiara e precisa con riferimento alle parti del documento in cui sono riportate le informazioni."
-        "Fornisci spiegazioni dettagliate e complete."
-    )
+    context = "rispondi in modo ampio e dettagliato, in italiano"
     mode = data.get("mode")
 
     if mode == "rag":
@@ -126,7 +122,7 @@ async def ask(request: Request):
         if vector_store is None or qa_chain is None:
             return {"answer": "RAG system is not initialized. Upload a document first."}
         
-        result = qa_chain.invoke({"query": context + question})
+        result = qa_chain.invoke({"query": question + context})
         answer = result["result"]
         log_answer(question, answer, mode="rag")
         return {"answer": result["result"]}
