@@ -11,7 +11,7 @@ def create_qa_chain(vectorstore):
 
     # Carica un modello Ollama locale
     llm = ChatOllama(
-        model="gemma:2b",
+        model="llama3.1",
         num_predict=1024
     )
 

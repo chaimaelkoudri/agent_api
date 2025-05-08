@@ -11,7 +11,7 @@ import os
 
 # Config
 DB_ADDRESS = "localhost"
-TARGET_MODEL = "ollama/mistral"
+TARGET_MODEL = "ollama/llama3.1"
 NUM_PROMPTS = 5
 ATTACK_MODES = [FuzzerAttackMode.DEF]
 CLASSIFIER = handler()

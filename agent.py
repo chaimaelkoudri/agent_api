@@ -5,7 +5,7 @@ from langchain_ollama.llms import OllamaLLM
 # Funzione principale che gestisce la logica dell'agente
 def ask_agent(question: str) -> str:
     # Crea un'istanza del modello AI utilizzando Ollama
-    llm = OllamaLLM(model="gemma:2b")
+    llm = OllamaLLM(model="llama3.1")
 
     # Definisce un template semplice per il prompt che invieremo al modello
     prompt = ChatPromptTemplate.from_template("Domanda: {question}")

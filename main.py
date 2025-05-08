@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
         # Ottieni il retriever dall'indice
         retriever = vector_store.as_retriever()
         # Inizializza il modello LLM usando Ollama (local o tramite API del servizio Ollama)
-        llm = OllamaLLM(model="gemma:2b")  
+        llm = OllamaLLM(model="llama3.1")  
         # Crea la RetrievalQA chain che combina il retriever e il LLM generativo
         qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, chain_type="stuff")
         print("Sistema RAG pronto.")
@@ -82,8 +82,6 @@ async def initialize_rag(force: bool = False):
     
     docs = load_and_split("docs/")
     vector_store = create_vectorstore(docs)
-    # retriever = vector_store.as_retriever()
-    # llm = ollama(model="gemma:2b")
     qa_chain = create_qa_chain(vector_store)
 
     return {"message": "Sistema RAG inizializzato con successo."}
