@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from FuzzyAI.fuzzy.fuzzer import Fuzzer
 from FuzzyAI.fuzzy.handlers.attacks.enums import FuzzerAttackMode
-from FuzzyAI.fuzzy.handlers.classifiers.generic_llm import LLMEvaluatorClassifier
+from FuzzyAI.fuzzy.handlers.classifiers.generic_llm.handler import LLMEvaluatorClassifier
 
 from agent_wrapper import FastAPIAgent
 from EasyJailbreak.easyjailbreak.datasets.jailbreak_datasets import JailbreakDataset, Instance

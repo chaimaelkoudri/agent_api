@@ -123,10 +123,10 @@ async def ask(request: Request):
         result = qa_chain.invoke({"query": question + context})
         answer = result["result"]
         log_answer(question, answer, mode="rag")
-        return {"answer": result["result"]}
+        return {"answer": answer}
     
     elif mode == "default":
         # Modalità classica che usa il comportamento definito in ask_agent
-        answer = ask_agent(question)
+        answer = await ask_agent(question)
         log_answer(question, answer, mode="default")
         return {"answer": answer}
