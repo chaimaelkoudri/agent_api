@@ -1,4 +1,22 @@
 fastapi
 uvicorn
-langchain
+watchdog
+matplotlib
 ollama
+langchain
+langchain-community
+langchain-core
+langchain-ollama
+pydantic
+aiofiles
+httpx
+python-multipart
+requests
+PyPDF2
+faiss-cpu
+huggingface_hub
+
+# Se usi direttamente pacchetti locali o custom, puoi installarli con pip install -e .
+# Altrimenti, se sono pip-installabili:
+FuzzyAI @ git+https://github.com/<user>/FuzzyAI.git
+EasyJailbreak @ git+https://github.com/<user>/EasyJailbreak.git
