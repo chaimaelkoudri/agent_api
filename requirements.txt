@@ -16,6 +16,10 @@ PyPDF2
 faiss-cpu
 huggingface_hub
 
+torch
+aiohttp
+transformers
+
 # Se usi direttamente pacchetti locali o custom, puoi installarli con pip install -e .
 # Altrimenti, se sono pip-installabili:
 FuzzyAI @ git+https://github.com/<user>/FuzzyAI.git
