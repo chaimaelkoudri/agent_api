@@ -22,7 +22,7 @@ os.makedirs("logs", exist_ok=True)
 vector_store = None
 qa_chain = None
 
-# Modello di input per le domande (non obbligatorio, sebbene utile)
+# Modello di input per le domande
 class QuestionRequest(BaseModel):
     question: str
     mode: str  # "rag" per la modalità RAG, "default" per la modalità classica
