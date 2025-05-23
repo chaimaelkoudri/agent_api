@@ -1,4 +1,3 @@
-import asyncio
 import aiohttp
 import torch
 from types import SimpleNamespace
@@ -40,6 +39,8 @@ class OllamaEasyJailbreakWrapper(ModelBase):
     async def close(self):
         if self.session and not self.session.closed:
             await self.session.close()
+        if self.ollama:
+            await self.ollama.close()
 
 class OllamaAutoDANWrapper(ModelBase):
     def __init__(self, async_wrapper: OllamaEasyJailbreakWrapper):
@@ -50,12 +51,6 @@ class OllamaAutoDANWrapper(ModelBase):
         self.model = self  # AutoDAN expects `.model.generate()`
         self.device = torch.device('cpu')
 
-    def generate(self, input_ids, **kwargs):
-        # Sync wrapper per uso con AutoDAN (chiamato da thread separato)
+    async def generate(self, input_ids, **kwargs):
         prompt = self.tokenizer.decode(input_ids[0], skip_special_tokens=True)
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            return loop.run_until_complete(self.async_wrapper.generate(prompt))
-        finally:
-            loop.close()
+        return await self.async_wrapper.generate(prompt)

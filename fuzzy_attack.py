@@ -1,6 +1,7 @@
 import asyncio
 import json
 from collections import defaultdict
+from fuzzy.llm.providers.ollama.ollama import OllamaProvider
 import matplotlib.pyplot as plt
 import torch
 
@@ -11,8 +12,19 @@ from easyjailbreak.datasets import JailbreakDataset
 from EasyJailbreak.easyjailbreak.datasets.jailbreak_datasets import Instance
 from EasyJailbreak.easyjailbreak.attacker.AutoDAN_Liu_2023 import AutoDAN
 
+from easyjailbreak.mutation.generation.Rephrase import Rephrase
 from wrapper_ollama import OllamaEasyJailbreakWrapper, OllamaAutoDANWrapper
 
+# Wrapper sincrono per usare OllamaProvider con Rephrase (che richiede generate sincrono)
+class OllamaSyncWrapper:
+    def __init__(self, provider: OllamaProvider):
+        self.provider = provider
+
+    async def generate(self, prompt: str):
+        response = await self.provider.generate(prompt=prompt)
+        if response is None:
+            return None
+        return response.response
 
 # Monkey patch per evitare chiamate reali a modelli durante il punteggio
 def fake_get_score_autodan(self, conv_template, instruction, target, device, test_controls=None, crit=None, model=None, **kwargs):
@@ -22,7 +34,7 @@ AutoDAN.get_score_autodan = fake_get_score_autodan
 
 
 # Configurazioni
-DB_ADDRESS = "localhost"
+DB_ADDRESS = "mongodb://localhost:27017"
 NUM_PROMPTS = 5
 ATTACK_MODES = [
     FuzzerAttackMode.DEFAULT,
@@ -60,6 +72,11 @@ async def main():
     instances = [Instance(prompt=p, reference_responses=["Risposta sicura o placeholder"]) for p in PROMPTS]
     jailbreak_dataset = JailbreakDataset(instances)
 
+   # Istanza OllamaProvider (async)
+    ollama_provider = OllamaProvider(model="llama3", llm_address="localhost", ollama_port=11434)
+    # Wrapper sincrono per usarlo con Rephrase
+    ollama_model = OllamaSyncWrapper(ollama_provider)
+
     # Setup attaccante AutoDAN
     attacker = AutoDAN(
         attack_model=None,
@@ -68,8 +85,10 @@ async def main():
         jailbreak_datasets=jailbreak_dataset
     )
 
+    attacker.rephrase_mutation = Rephrase(ollama_model)
+
     # Esegui attacco in thread separato per evitare problemi con event loop
-    await asyncio.to_thread(attacker.attack)
+    await attacker.attack()
 
     # Ottieni i prompt generati dall'attacco (limite NUM_PROMPTS)
     generated_prompts = [inst.prompt for inst in attacker.jailbreak_datasets][:NUM_PROMPTS]
@@ -79,12 +98,12 @@ async def main():
     print("\nInizializzazione Fuzzer di FuzzyAI...")
     fuzzer = Fuzzer(db_address=DB_ADDRESS)
     fuzzer.add_classifier(CLASSIFIER)
-    fuzzer.add_llm(target)
+    fuzzer.add_llm("ollama/llama3")
 
     # Avvia fuzzing con i prompt generati
     print("Avvio attacco sui prompt generati...")
     raw = await fuzzer.fuzz(
-        model=target,
+        model=["ollama/llama3"],
         attack_modes=ATTACK_MODES,
         prompts=generated_prompts
     )
@@ -92,19 +111,29 @@ async def main():
     # Stampa e salva risultati
     all_results = []
     for attack in raw:
-        print(f"\nModello: {attack.model}")
-        print(f"Modalità attacco: {attack.attack_mode}")
-        print(f"Prompt jailbreak riusciti: {len(attack.jailbroken_instances)}")
-        for inst in attack.jailbroken_instances:
+        print(f"\nTipo oggetto: {type(attack)}")
+        print(f"Contenuto oggetto: {attack}\n")
+
+        model = getattr(attack, "model", getattr(attack, "fuzzer_name", "Sconosciuto"))
+        attack_mode = getattr(attack, "attack_mode", "N/A")
+        system_prompt = getattr(attack, "system_prompt", "")
+
+        jailbroken_instances = getattr(attack, "jailbroken_instances", [])
+
+        print(f"\nModello: {model}")
+        print(f"Modalità attacco: {attack_mode}")
+        print(f"Prompt jailbreak riusciti: {len(jailbroken_instances)}")
+        
+        for inst in jailbroken_instances:
             print("─" * 40)
             print(f"Prompt: {inst.prompt}")
             print(f"Risposta: {inst.response}\n")
 
         all_results.append({
-            "model": str(attack.model),
-            "attack_mode": str(attack.attack_mode),
-            "system_prompt": attack.system_prompt,
-            "jailbroken": [{"prompt": inst.prompt, "response": inst.response} for inst in attack.jailbroken_instances],
+            "model": str(model),
+            "attack_mode": str(attack_mode),
+            "system_prompt": system_prompt,
+            "jailbroken": [{"prompt": inst.prompt, "response": inst.response} for inst in jailbroken_instances],
             "total_prompts": len(generated_prompts)
         })
 
